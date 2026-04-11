@@ -2,7 +2,15 @@
 # Home Server Backup Script
 # Runs as root via root crontab at 03:00 AM
 
-LOG_FILE="/home/ashtic/backup_log.txt"
+# --- Config ---
+# Edit these variables to match your environment
+SERVER_USER="your_username"
+NEXTCLOUD_DB_CONTAINER="nextcloud-db-1"
+IMMICH_DB_CONTAINER="immich_postgres"
+
+# --- Derived paths (do not edit) ---
+HOME_DIR="/home/${SERVER_USER}"
+LOG_FILE="${HOME_DIR}/backup_log.txt"
 LIVE="/mnt/data_live"
 BACKUP="/mnt/data_backup"
 
@@ -14,7 +22,7 @@ log_message "========================================"
 log_message "Starting Backup Process..."
 
 # Load environment variables for Nextcloud DB
-ENV_FILE="/home/ashtic/nextcloud/.env"
+ENV_FILE="${HOME_DIR}/nextcloud/.env"
 if [ -f "$ENV_FILE" ]; then
     export $(grep -v '^#' "$ENV_FILE" | xargs)
     log_message "Environment variables loaded."
@@ -30,7 +38,7 @@ mkdir -p "$LIVE/backups/nextcloud_db"
 # 1. Immich DB Dump
 log_message "Starting Immich DB dump..."
 IMMICH_DUMP="$LIVE/backups/immich_db/dump_$(date +%Y-%m-%d).sql.gz"
-/usr/bin/docker exec -t immich_postgres pg_dumpall -c -U postgres | gzip > "$IMMICH_DUMP"
+/usr/bin/docker exec -t "$IMMICH_DB_CONTAINER" pg_dumpall -c -U postgres | gzip > "$IMMICH_DUMP"
 if [ ${PIPESTATUS[0]} -ne 0 ]; then
     log_message "ERROR: Immich DB dump failed. Aborting to protect backup integrity."
     exit 1
@@ -40,7 +48,7 @@ log_message "Immich DB dump completed: $IMMICH_DUMP"
 # 2. Nextcloud DB Dump
 log_message "Starting Nextcloud DB dump..."
 NC_DUMP="$LIVE/backups/nextcloud_db/nextcloud_db_$(date +%Y-%m-%d).sql"
-/usr/bin/docker exec nextcloud-db-1 mysqldump -u nextcloud -p"${DB_PASSWORD}" nextcloud > "$NC_DUMP"
+/usr/bin/docker exec "$NEXTCLOUD_DB_CONTAINER" mysqldump -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" > "$NC_DUMP"
 if [ $? -ne 0 ]; then
     log_message "ERROR: Nextcloud DB dump failed. Aborting to protect backup integrity."
     exit 1
@@ -66,7 +74,7 @@ RSYNC_EXIT=$?
 if [ $RSYNC_EXIT -ne 0 ]; then
     log_message "ERROR: rsync mirror encountered errors. Check output above."
     echo ""
-    echo "❌ Backup completed WITH ERRORS. Check ~/backup_log.txt for details."
+    echo "❌ Backup completed WITH ERRORS. Check ${LOG_FILE} for details."
     echo ""
 else
     log_message "rsync mirror completed successfully."
@@ -88,6 +96,6 @@ echo "================================================"
 echo "  Immich DB : $IMMICH_SIZE  →  $(basename $LAST_IMMICH)"
 echo "  Nextcloud : $NC_SIZE  →  $(basename $LAST_NC)"
 echo "  Mirror    : Live → Backup drive synced"
-echo "  Log       : ~/backup_log.txt"
+echo "  Log       : ${LOG_FILE}"
 echo "================================================"
 echo ""
