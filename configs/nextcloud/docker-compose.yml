@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  db:
+    image: mariadb:10.6
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: always
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  redis:
+    image: redis:alpine
+    restart: always
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  app:
+    image: nextcloud:latest
+    restart: always
+    ports:
+      - 8080:80
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - /mnt/data_live/nextcloud_data:/var/www/html/data
+      - ./config:/var/www/html/config
+    environment:
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_HOST=db
+      - REDIS_HOST=redis
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
