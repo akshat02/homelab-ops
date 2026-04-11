@@ -71,7 +71,7 @@ Client Device
 ## Repository Structure
 
 ```
-home-server/
+homelab-ops/
 ├── README.md
 ├── config/
 │   ├── nextcloud/
