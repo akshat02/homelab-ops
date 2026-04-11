@@ -7,6 +7,7 @@ Self-hosted photo library, file sync, and remote access — zero cloud dependenc
 
 ## Quick Reference
 
+| | |
 |---|---|
 | **Host** | `hp-laptop` (Tailscale) / `100.116.25.81` |
 | **OS** | Linux Mint 22.3 XFCE |
