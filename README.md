@@ -1,6 +1,6 @@
 # Home Server
 
-Personal cloud infrastructure running on a repurposed HP Pavilion g6 laptop.
+Personal cloud infrastructure running on a repurposed laptop.
 Self-hosted photo library, file sync, and remote access — zero cloud dependency.
 
 ---
@@ -9,36 +9,36 @@ Self-hosted photo library, file sync, and remote access — zero cloud dependenc
 
 | | |
 |---|---|
-| **Host** | `hp-laptop` (Tailscale) / `100.116.25.81` |
+| **Host** | `<SERVER_HOSTNAME>` (Tailscale) |
 | **OS** | Linux Mint 22.3 XFCE |
 
 ### Services
 
-| Service | URL (Tailscale) | Port | Stack |
+| Service | URL (Tailscale) | Port | Project Dir |
 |---|---|---|---|
-| Nextcloud | `http://100.116.25.81:8080` | 8080 | `~/nextcloud/` |
-| Immich | `http://100.116.25.81:2283` | 2283 | `~/immich-app/` |
+| Nextcloud | `http://<SERVER_TAILSCALE_IP>:8080` | 8080 | `<HOME>/nextcloud/` |
+| Immich | `http://<SERVER_TAILSCALE_IP>:2283` | 2283 | `<HOME>/immich-app/` |
 
 ### Storage
 
-| Label | Device | Mount | Purpose |
-|---|---|---|---|
-| Live Drive | `/dev/sdb` | `/mnt/data_live` | Primary data (Nextcloud + Immich) |
-| Backup Drive | `/dev/sdc1` | `/mnt/data_backup` | Nightly rsync mirror of Live |
-| Internal SSD | `/dev/sda2` | `/` | OS + Docker + Immich Postgres |
+| Label | Mount | Purpose |
+|---|---|---|
+| Live Drive | `/mnt/data_live` | Primary data (Nextcloud + Immich) |
+| Backup Drive | `/mnt/data_backup` | Nightly rsync mirror of Live |
+| Internal SSD | `/` | OS + Docker engine + Immich Postgres |
 
 ### Key Paths
 
 | Path | Purpose |
 |---|---|
-| `~/nextcloud/` | Nextcloud compose project |
-| `~/nextcloud/.env` | Nextcloud/MariaDB credentials |
-| `~/nextcloud/config/config.php` | Nextcloud live config |
-| `~/immich-app/` | Immich compose project |
-| `~/immich-app/.env` | Immich/Postgres credentials |
-| `~/daily_backup.sh` | Backup script |
-| `~/backup_log.txt` | Backup run log |
-| `~/nextcloud_update_log.txt` | Weekly Nextcloud update log |
+| `<HOME>/nextcloud/` | Nextcloud compose project |
+| `<HOME>/nextcloud/.env` | Nextcloud/MariaDB credentials |
+| `<HOME>/nextcloud/config/config.php` | Nextcloud live config (includes dbpassword) |
+| `<HOME>/immich-app/` | Immich compose project |
+| `<HOME>/immich-app/.env` | Immich/Postgres credentials |
+| `<HOME>/daily_backup.sh` | Backup script |
+| `<HOME>/backup_log.txt` | Backup run log |
+| `<HOME>/nextcloud_update_log.txt` | Weekly Nextcloud update log |
 | `/mnt/data_live/backups/` | DB dumps (7-day retention) |
 
 ---
@@ -56,9 +56,9 @@ Self-hosted photo library, file sync, and remote access — zero cloud dependenc
 ## Architecture Summary
 
 ```
-MacBook
+Client Device
   └── Tailscale (WireGuard)
-        └── hp-laptop (Linux Mint)
+        └── Home Server (Linux Mint)
               ├── Docker
               │     ├── Nextcloud (app + MariaDB + Redis)
               │     └── Immich (server + ML + Postgres + Redis)
@@ -97,34 +97,34 @@ home-server/
 
 ---
 
-## Emergency Contacts
+## Emergency Reference
 
 - **Drive failing:** See `docs/04-runbooks/RB-01-failover-to-backup-drive.md`
 - **Password rotation:** See `docs/04-runbooks/RB-02-password-rotation.md`
 - **Full reinstall:** See `docs/04-runbooks/RB-05-full-reinstall.md`
-- **Check backup status:** `cat ~/backup_log.txt | tail -30`
+- **Check backup status:** `cat <HOME>/backup_log.txt | tail -30`
 - **Check all containers:** `docker ps -a`
-- **Check drive health:** `sudo smartctl -a /dev/sdb`
+- **Check drive health:** `sudo smartctl -a <LIVE_DRIVE_DEVICE>`
 
 ---
 
-## .env Structure
+## .env Structure (Do Not Commit Actual Values)
 
-`~/nextcloud/.env`:
+`<HOME>/nextcloud/.env`:
 ```
 DB_ROOT_PASSWORD=
 DB_PASSWORD=
-DB_USER=nextcloud
-DB_NAME=nextcloud
+DB_USER=
+DB_NAME=
 ```
 
-`~/immich-app/.env`:
+`<HOME>/immich-app/.env`:
 ```
-UPLOAD_LOCATION=/mnt/data_live/immich_library
-DB_DATA_LOCATION=./postgres
-TZ=Asia/Kolkata
-IMMICH_VERSION=v2
+UPLOAD_LOCATION=
+DB_DATA_LOCATION=
+TZ=
+IMMICH_VERSION=
 DB_PASSWORD=
-DB_USERNAME=postgres
-DB_DATABASE_NAME=immich
+DB_USERNAME=
+DB_DATABASE_NAME=
 ```
