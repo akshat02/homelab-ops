@@ -18,14 +18,15 @@ Self-hosted photo library, file sync, and remote access — zero cloud dependenc
 |---|---|---|---|
 | Nextcloud | `http://<SERVER_TAILSCALE_IP>:8080` | 8080 | `<HOME>/nextcloud/` |
 | Immich | `http://<SERVER_TAILSCALE_IP>:2283` | 2283 | `<HOME>/immich-app/` |
+| OpenClaw | `http://<SERVER_TAILSCALE_IP>:18789` | 18789 | `<HOME>/openclaw/` |
 
 ### Storage
 
 | Label | Mount | Purpose |
 |---|---|---|
-| Live Drive | `/mnt/data_live` | Primary data (Nextcloud + Immich) |
+| Live Drive | `/mnt/data_live` | Primary data (Nextcloud + Immich + OpenClaw backup dumps) |
 | Backup Drive | `/mnt/data_backup` | Nightly rsync mirror of Live |
-| Internal SSD | `/` | OS + Docker engine + Immich Postgres |
+| Internal SSD | `/` | OS + Docker engine + Immich Postgres + OpenClaw database/agent cache |
 
 ### Key Paths
 
@@ -36,7 +37,10 @@ Self-hosted photo library, file sync, and remote access — zero cloud dependenc
 | `<HOME>/nextcloud/config/config.php` | Nextcloud live config (includes dbpassword) |
 | `<HOME>/immich-app/` | Immich compose project |
 | `<HOME>/immich-app/.env` | Immich/Postgres credentials |
+| `<HOME>/openclaw/` | OpenClaw agent gateway project |
+| `<HOME>/openclaw/.env` | OpenClaw API keys and gateway tokens |
 | `<HOME>/daily_backup.sh` | Backup script |
+| `<HOME>/shutdown-server.sh` | Clean shutdown helper script |
 | `<HOME>/backup_log.txt` | Backup run log |
 | `<HOME>/nextcloud_update_log.txt` | Weekly Nextcloud update log |
 | `/mnt/data_live/backups/` | DB dumps (7-day retention) |
@@ -61,7 +65,8 @@ Client Device
         └── Home Server (Linux Mint)
               ├── Docker
               │     ├── Nextcloud (app + MariaDB + Redis)
-              │     └── Immich (server + ML + Postgres + Redis)
+              │     ├── Immich (server + ML + Postgres + Redis)
+              │     └── OpenClaw (agent gateway + docker socket proxy)
               ├── /mnt/data_live    ← primary storage (ext4, USB HDD)
               └── /mnt/data_backup  ← nightly mirror  (ext4, USB HDD)
 ```
@@ -73,13 +78,16 @@ Client Device
 ```
 homelab-ops/
 ├── README.md
-├── config/
+├── configs/
 │   ├── nextcloud/
 │   │   └── docker-compose.yml
-│   └── immich/
+│   ├── immich-app/
+│   │   └── docker-compose.yml
+│   └── openclaw/
 │       └── docker-compose.yml
 ├── scripts/
-│   └── daily_backup.sh
+│   ├── daily_backup.sh
+│   └── shutdown-server.sh
 ├── docs/
 │   ├── 01-architecture.md
 │   ├── 02-services.md
@@ -127,4 +135,11 @@ IMMICH_VERSION=
 DB_PASSWORD=
 DB_USERNAME=
 DB_DATABASE_NAME=
+```
+
+`<HOME>/openclaw/.env`:
+```
+OPENCLAW_GATEWAY_TOKEN=
+DEEPSEEK_API_KEY=
+TELEGRAM_TOKEN_USER=
 ```

@@ -125,6 +125,7 @@ Existing ports in use:
 |---|---|
 | 8080 | Nextcloud |
 | 2283 | Immich |
+| 18789 | OpenClaw |
 | 22 | SSH |
 
 ---

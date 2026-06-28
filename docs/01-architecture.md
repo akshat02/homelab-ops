@@ -140,7 +140,19 @@ To find current UUIDs: `lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT,UUID`
 - Credentials: `<HOME>/immich-app/.env`
 - **Immich is excluded from auto-updates** — update manually due to breaking DB migration risk
 
+### OpenClaw Stack (`<HOME>/openclaw/`)
+| Container | Image | Purpose |
+|---|---|---|
+| `<OPENCLAW_APP_CONTAINER>` | `ghcr.io/openclaw/openclaw:2026.5.22` | Agent gateway execution |
+| `<DOCKER_PROXY_CONTAINER>` | `tecnativa/docker-socket-proxy` | Secure docker socket exposure |
+
+- Agent Data & Workspace: `<HOME>/openclaw/agents/` (local data volume on internal SSD)
+- Host Access: `<HOME>` mounted read-only to `/host-home` for host context awareness
+- Security: Runs with dropped capabilities (`ALL`) and restricts access through `docker-socket-proxy`
+- Credentials: `<HOME>/openclaw/.env` and secrets under `<HOME>/openclaw/secrets/`
+
 ---
+
 
 ## Design Decisions & Rationale
 
