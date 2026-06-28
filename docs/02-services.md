@@ -10,6 +10,7 @@ Reference for all services running on the home server — configuration, access,
 |---|---|---|---|
 | Nextcloud | File sync and personal cloud | 8080 | `<HOME>/nextcloud/` |
 | Immich | Self-hosted photo/video library | 2283 | `<HOME>/immich-app/` |
+| OpenClaw | Self-hosted LLM agent gateway | 18789 | `<HOME>/openclaw/` |
 
 All services are accessible **only via Tailscale IP** — no ports are exposed to the public internet.
 
@@ -178,6 +179,36 @@ To import from Google Takeout or Apple iCloud exports while preserving metadata:
 
 ---
 
+## OpenClaw
+
+### Purpose
+Self-hosted LLM agent gateway and remote tool/agent controller. Connects external interfaces (e.g. Telegram) to internal LLM capabilities with local sandboxed file and command execution permissions.
+
+### Stack Composition
+
+| Container | Role | Image |
+|---|---|---|
+| `<OPENCLAW_APP_CONTAINER>` | Agent execution engine | `ghcr.io/openclaw/openclaw:2026.5.22` |
+| `<DOCKER_PROXY_CONTAINER>` | Safe docker daemon proxy | `tecnativa/docker-socket-proxy` |
+
+### Key Paths
+
+| Path | Purpose |
+|---|---|
+| `<HOME>/openclaw/docker-compose.yml` | Stack definition |
+| `<HOME>/openclaw/.env` | Tokens and API keys (do not commit) |
+| `<HOME>/openclaw/secrets/obsidian_key` | Secret encryption key for Obsidian integration |
+| `<HOME>/openclaw/agents/` | Local agent persistence folders |
+
+### Access
+- Port: `18789` (used for API / webhooks interaction internally or via Tailscale)
+
+### Security Notes
+- Mounts host's `<HOME>` folder to `/host-home` in read-only mode (`ro`).
+- Uses `docker-socket-proxy` to limit container capabilities. The docker daemon socket is not mounted directly to the agent container to prevent container breakout.
+
+---
+
 ## Common Operational Commands
 
 ### Check all container status
@@ -189,6 +220,7 @@ docker ps -a
 ```bash
 cd <HOME>/nextcloud && docker compose restart
 cd <HOME>/immich-app && docker compose restart
+cd <HOME>/openclaw && docker compose restart
 ```
 
 ### View container logs
