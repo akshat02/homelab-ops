@@ -87,7 +87,8 @@ homelab-ops/
 │       └── docker-compose.yml
 ├── scripts/
 │   ├── daily_backup.sh
-│   └── shutdown-server.sh
+│   ├── shutdown-server.sh
+│   └── drift-check.sh
 ├── docs/
 │   ├── 01-architecture.md
 │   ├── 02-services.md
