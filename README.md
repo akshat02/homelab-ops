@@ -41,6 +41,9 @@ Self-hosted photo library, file sync, and remote access — zero cloud dependenc
 | `<HOME>/openclaw/.env` | OpenClaw API keys and gateway tokens |
 | `<HOME>/daily_backup.sh` | Backup script |
 | `<HOME>/shutdown-server.sh` | Clean shutdown helper script |
+| `<HOME>/startup-data-drives.sh` | Mount external HDDs and start Immich + Nextcloud |
+| `<HOME>/shutdown-data-drives.sh` | Stop Immich + Nextcloud, unmount, and spin down HDDs |
+| `<HOME>/drift-check.sh` | Repo template drift check script |
 | `<HOME>/backup_log.txt` | Backup run log |
 | `<HOME>/nextcloud_update_log.txt` | Weekly Nextcloud update log |
 | `/mnt/data_live/backups/` | DB dumps (7-day retention) |
@@ -87,8 +90,10 @@ homelab-ops/
 │       └── docker-compose.yml
 ├── scripts/
 │   ├── daily_backup.sh
+│   ├── drift-check.sh
+│   ├── shutdown-data-drives.sh
 │   ├── shutdown-server.sh
-│   └── drift-check.sh
+│   └── startup-data-drives.sh
 ├── docs/
 │   ├── 01-architecture.md
 │   ├── 02-services.md

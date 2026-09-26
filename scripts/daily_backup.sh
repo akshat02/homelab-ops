@@ -18,6 +18,38 @@ log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
 }
 
+# --- Pre-flight checks ---
+# 1. Is the live drive actually mounted?
+if ! mountpoint -q "$LIVE"; then
+    log_message "FATAL: Live drive ($LIVE) is not mounted. Aborting."
+    echo ""
+    echo "================================================"
+    echo "❌  BACKUP ABORTED — Live drive not mounted"
+    echo "================================================"
+    exit 1
+fi
+
+# 2. Is the backup drive actually mounted?
+if ! mountpoint -q "$BACKUP"; then
+    log_message "FATAL: Backup drive ($BACKUP) is not mounted. Aborting."
+    echo ""
+    echo "================================================"
+    echo "❌  BACKUP ABORTED — Backup drive not mounted"
+    echo "================================================"
+    exit 1
+fi
+
+# 3. Does the live drive have actual data? (prevent rsync --delete disasters)
+LIVE_USED=$(df --output=pcent "$LIVE" 2>/dev/null | tail -1 | tr -d ' %')
+if [ -z "$LIVE_USED" ] || [ "$LIVE_USED" -lt 1 ]; then
+    log_message "FATAL: Live drive shows <1% usage. Aborting to protect backup."
+    echo ""
+    echo "================================================"
+    echo "❌  BACKUP ABORTED — Live drive appears empty"
+    echo "================================================"
+    exit 1
+fi
+
 log_message "========================================"
 log_message "Starting Backup Process..."
 
@@ -58,6 +90,17 @@ log_message "Nextcloud DB dump completed: $NC_DUMP"
 # 3. Fix ownership so files are consistent
 chown -R www-data:www-data "$LIVE/backups/"
 log_message "Ownership corrected on backup files."
+
+# 3b. OpenClaw config & memory backup (runs before mirror so it propagates to backup drive)
+OPENCLAW_DIR="/home/${SERVER_USER}/openclaw/agents/user/data"
+mkdir -p "$LIVE/backups/openclaw"
+log_message "Starting OpenClaw config backup..."
+/usr/bin/rsync -av --delete "$OPENCLAW_DIR/" "$LIVE/backups/openclaw/" >> "$LOG_FILE" 2>&1
+if [ $? -ne 0 ]; then
+    log_message "WARNING: OpenClaw backup had errors (non-fatal)."
+else
+    log_message "OpenClaw config backup completed."
+fi
 
 # 4. Cleanup old Immich DB dumps (keep 7 days)
 find "$LIVE/backups/immich_db/" -mtime +7 -type f -delete
