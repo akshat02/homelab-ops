@@ -17,6 +17,20 @@ Reference for all ongoing maintenance tasks — automated, scheduled, and manual
 | Backup log review | Weekly (manual) | `tail backup_log.txt` | 🔲 Manual |
 | Immich update | As needed (manual) | `docker compose pull` | 🔲 Manual |
 | Off-site backup (Rclone) | Weekly | Rclone + Backblaze B2 | 🔲 Planned |
+| Repo template drift check | Daily 04:00 UTC | OpenClaw cron (`drift-check.sh`) | ✅ Automated |
+
+---
+
+## Repo Template Maintenance
+
+The public `homelab-ops` repo is a sanitized template of this server's setup. A daily drift check compares live configs against the repo and alerts to Telegram when they diverge, so the template never silently goes stale.
+
+- **Script:** `<HOME>/drift-check.sh` (server copy, real values) ↔ `scripts/drift-check.sh` (repo copy, placeholders)
+- **Schedule:** Daily 04:00 UTC — OpenClaw cron (isolated agent → docker-proxy container, bind-mounts `<HOME>`)
+- **Manual run:** `sh <HOME>/drift-check.sh` (full diffs with `--verbose`)
+- **Tracked files:** `daily_backup.sh`, `shutdown-server.sh`, drive lifecycle scripts, the three compose files, and the script's own repo copy (self-check)
+
+When drift is reported, update the repo on a feature branch (sanitized, placeholders only) and merge — never commit real paths, usernames, or credentials.
 
 ---
 
